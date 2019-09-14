@@ -192,6 +192,10 @@
 -(CGFloat)preferredExpandedContentWidth;
 @end
 
+@interface SBFApplication : NSObject
+- (NSString *)applicationBundleIdentifier;
+@end
+
 static CCCalcViewController *ccCalcController;
 
 %hook CCUIAppLauncherViewController
@@ -244,7 +248,7 @@ static CCCalcViewController *ccCalcController;
 }
 
 %new -(BOOL)isCalcModule {
-	return [[self title] isEqualToString:@"Calculator"];
+	return [[MSHookIvar<SBFApplication *>(self, "_application") applicationBundleIdentifier] isEqualToString:@"com.apple.calculator"];
 }
 
 %end

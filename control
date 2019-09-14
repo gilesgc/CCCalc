@@ -1,9 +1,11 @@
 Package: com.gilesgc.cccalc
 Name: CCCalc
 Depends: mobilesubstrate
-Version: 1.0.0
+Version: 1.0.1
 Architecture: iphoneos-arm
 Description: Turn your calculator module into a real calculator
 Maintainer: gilesgc
 Author: gilesgc
 Section: Tweaks
+Depiction: https://gilesgc.github.io/repo/depictions/?p=com.gilesgc.cccalc
+Icon: https://gilesgc.github.io/repo/depictions/com.gilesgc.cccalc/cccalc-icon.png
