@@ -19,8 +19,22 @@
 
 - (void)setFrame:(CGRect)arg1 {
 	%orig;
-	for(UIView *view in [(UIView *)self subviews])
+
+	for(UIView *view in [self subviews])
 		[view setFrame:CGRectMake(0,0,arg1.size.width,arg1.size.height)];
+
+	if([self character] == BTN_0) {
+		for(UIView *subview in [self subviews]) {
+			for(CALayer *sublayer in [[subview layer] sublayers]) {
+				if([NSStringFromClass([sublayer class]) isEqualToString:@"CABackdropLayer"]) {
+					//this fixes the visual issue with button 0
+					[sublayer setFrame:CGRectMake(0,0,arg1.size.width,arg1.size.height)];
+					break;
+				}
+			}
+		}
+	}
+
 	[objc_getAssociatedObject(self, @selector(glyphImage)) setFrame:CGRectMake(0,0,arg1.size.width,arg1.size.height)];
 }
 
@@ -83,6 +97,15 @@
 %end
 
 @implementation CCCalcViewController
+static CGRect _circleBounds = [%c(CCCalcButton) circleBounds];
+
+//buttons placement from top left to bottom right (not including bottom row because special case)
+static int _buttonsGrid[4][4] = {
+	{ BTN_CLEAR,	BTN_NEGATE, BTN_PERCENT, 	BTN_DIVIDE },
+	{ BTN_7, 		BTN_8, 		BTN_9, 			BTN_MULTIPLY },
+	{ BTN_4, 		BTN_5, 		BTN_6, 			BTN_SUBTRACT },
+	{ BTN_1, 		BTN_2, 		BTN_3, 			BTN_ADD }
+};
 
 - (id)init {
 	self = [super init];
@@ -127,37 +150,31 @@
 }
 
 - (void)layoutButtons {
-	//buttons placement from top left to bottom right (not including bottom row because special case)
-	int buttonsGrid[4][4] = {
-		{ BTN_CLEAR, BTN_NEGATE, BTN_PERCENT, BTN_DIVIDE },
-		{ BTN_7, BTN_8, BTN_9, BTN_MULTIPLY },
-		{ BTN_4, BTN_5, BTN_6, BTN_SUBTRACT },
-		{ BTN_1, BTN_2, BTN_3, BTN_ADD }
-	};
+	
 	for(int row = 0; row <= 3; row++)
 		for(int column = 0; column <= 3; column++)
-			[self.buttons[@(buttonsGrid[row][column])] setFrame:[self positionAtColumn:column row:row]];
+			[self.buttons[@(_buttonsGrid[row][column])] setFrame:[self positionAtColumn:column row:row]];
 
-	[self.buttons[@(BTN_0)] setFrame:CGRectMake([self column:0], [self row:4], [self column:1] + [%c(CCCalcButton) circleBounds].size.width - ((double)[self view].frame.size.width / 4.0f - [%c(CCCalcButton) circleBounds].size.width)/2.0f, [%c(CCCalcButton) circleBounds].size.height)];
+	[self.buttons[@(BTN_0)] setFrame:CGRectMake([self column:0], [self row:4], [self column:1] + _circleBounds.size.width - ((double)[self view].frame.size.width / 4.0f - _circleBounds.size.width)/2.0f, _circleBounds.size.height)];
 	[self.buttons[@(BTN_DECIMAL)] setFrame:[self positionAtColumn:2 row:4]];
 	[self.buttons[@(BTN_EQUAL)] setFrame:[self positionAtColumn:3 row:4]];
 }
 
 - (float)column:(unsigned int)column {
-	return ((double)[self view].frame.size.width / 4.0f) * column + ((double)[self view].frame.size.width / 4.0f - [%c(CCCalcButton) circleBounds].size.width)/2.0f;
+	return ((double)[self view].frame.size.width / 4.0f) * column + ((double)[self view].frame.size.width / 4.0f - _circleBounds.size.width)/2.0f;
 }
 
 - (float)row:(unsigned int)row {
-	return ((double)[self view].frame.size.height / 5.0f) * row + ((double)[self view].frame.size.height / 5.0f - [%c(CCCalcButton) circleBounds].size.height)/2.0f;
+	return ((double)[self view].frame.size.height / 5.0f) * row + ((double)[self view].frame.size.height / 5.0f - _circleBounds.size.height)/2.0f;
 }
 
 - (CGRect)positionAtColumn:(unsigned int)column row:(unsigned int)row {
-	return CGRectMake([self column:column], [self row:row], [%c(CCCalcButton) circleBounds].size.width, [%c(CCCalcButton) circleBounds].size.height);
+	return CGRectMake([self column:column], [self row:row], _circleBounds.size.width, _circleBounds.size.height);
 }
 
 - (void)buttonTapped:(unsigned)identifier {
 	[[self brain] evaluateTap:identifier];
-	[[self displayView] setText:[[self brain] currentValue]];
+	[[self displayView] setText:[[self brain] currentValueWithCommas]];
 
 	if(identifier == BTN_ADD || identifier == BTN_SUBTRACT || identifier == BTN_MULTIPLY || identifier == BTN_DIVIDE) {
 		CCCalcButton *operationButton = [self buttons][@(identifier)];
@@ -184,12 +201,12 @@
 @end
 
 @interface CCUIAppLauncherViewController : UIViewController
--(UIView *)contentView;
--(UIImage *)glyphImage;
--(BOOL)isCalcModule;
--(UIView *)buttonView;
--(CGFloat)headerHeight;
--(CGFloat)preferredExpandedContentWidth;
+- (UIView *)contentView;
+- (UIImage *)glyphImage;
+- (BOOL)isCalcModule;
+- (UIView *)buttonView;
+- (CGFloat)headerHeight;
+- (CGFloat)preferredExpandedContentWidth;
 @end
 
 @interface SBFApplication : NSObject
