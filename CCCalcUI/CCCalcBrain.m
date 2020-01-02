@@ -15,6 +15,8 @@
 - (void)evaluateTap:(unsigned)identifier {
 
     if(identifier <= 9) {
+        if(identifier == BTN_0 && [displayValue isEqualToString:@"0"])
+            return;
         if(willStartSecondValue) {
             [self clearDisplay];
             willStartSecondValue = NO;

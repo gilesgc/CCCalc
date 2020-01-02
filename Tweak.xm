@@ -3,10 +3,13 @@
 %subclass CCCalcButton : TPNumberPadDarkStyleButton
 %property (nonatomic, retain) id delegate;
 %property (assign) BOOL shouldStayHighlighted;
-
 //Using subclass of the lockscreen keypad buttons for ez and nice looking buttons
 
 + (id)imageForCharacter:(unsigned)character {
+	if(character == BTN_MULTIPLY || character == BTN_NEGATE) {
+		NSBundle *bundle = [[NSBundle alloc] initWithPath:@"/Library/MobileSubstrate/DynamicLibraries/com.gilesgc.cccalc.bundle"];
+		return [UIImage imageWithContentsOfFile:[bundle pathForResource:(character == BTN_MULTIPLY ? @"multiply" : @"plus-minus") ofType:@"png"]];
+	}
 	UILabel *text = [[UILabel alloc] initWithFrame:CGRectMake(0,0,75,75)];
 	[text setTextColor:[UIColor whiteColor]];
 	[text setFont:[UIFont boldSystemFontOfSize:25]];
@@ -34,8 +37,6 @@
 			}
 		}
 	}
-
-	[objc_getAssociatedObject(self, @selector(glyphImage)) setFrame:CGRectMake(0,0,arg1.size.width,arg1.size.height)];
 }
 
 + (CGRect)circleBounds {
@@ -234,7 +235,7 @@ static CCCalcViewController *ccCalcController;
 			[[ccCalcController displayView] setFrame:CGRectMake(0,0,[self preferredExpandedContentWidth],[self headerHeight])];
 		}
 
-		for(UIView *menuItem in MSHookIvar<NSMutableArray *>(self, "_menuItemsViews")) {
+		for(UIView *menuItem in MSHookIvar<UIStackView *>(self, "_menuItemsContainer").arrangedSubviews) {
 			[menuItem setHidden:YES];
 		}
 
