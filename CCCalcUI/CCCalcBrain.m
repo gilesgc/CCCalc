@@ -38,12 +38,13 @@
                     [self clearDisplay];
                     willStartSecondValue = NO;
                     isOnSecondValue = YES;
-                    isShowingResult = NO;
+                } else if(previouslyTappedAddOrSub) {
+                    [self clearDisplay];
                 }
                 if(![displayValue containsString:@"."]) {
                     [self appendToDisplay:@"."];
-                    isShowingResult = NO;
                 }
+                isShowingResult = NO;
                 break;
 
             case BTN_CLEAR:
@@ -53,7 +54,9 @@
                     willStartSecondValue = NO;
                     firstNumber = 0.0;
                     secondNumber = 0.0;
+                    backgroundNumber = 0.0;
                     operation = 0.0;
+                    backgroundOperation = 0.0;
                 }
                 previouslyTappedClear = YES;
                 break;
@@ -68,35 +71,92 @@
             case BTN_PERCENT:
                 if(isOnSecondValue)
                     displayValue = [@(firstNumber * [displayValue doubleValue] / 100.0) stringValue];
+                else if(backgroundNumber != 0)
+                    displayValue = [@(backgroundNumber * [displayValue doubleValue] / 100.0) stringValue];
                 else
                     displayValue = [@([displayValue doubleValue] / 100.0) stringValue];
                 break;
 
             case BTN_EQUAL:
-                if(!isOnSecondValue) {
-                    if(secondNumber == 0)
-                        break;
-                    [self evaluate];
+                if(operation == 0)
+                    return;
+                if(isOnSecondValue) {
+                    secondNumber = [displayValue doubleValue];
+                    [self evaluateWithOperation:operation firstNumber:&firstNumber secondNumber:secondNumber];
+                    if(backgroundNumber != 0) {
+                        [self evaluateWithOperation:backgroundOperation firstNumber:&backgroundNumber secondNumber:firstNumber];
+                        firstNumber = backgroundNumber;
+                        backgroundNumber = 0.0;
+                    }
                     displayValue = [@(firstNumber) stringValue];
-                    break;
+                    isOnSecondValue = NO;
                 }
-                
-                secondNumber = [displayValue doubleValue];
-                [self evaluate];
-
-                displayValue = [@(firstNumber) stringValue];
-
-                isOnSecondValue = NO;
+                else {
+                    if(backgroundNumber != 0) {
+                        secondNumber = [displayValue doubleValue];
+                        [self evaluateWithOperation:backgroundOperation firstNumber:&backgroundNumber secondNumber:secondNumber];
+                        firstNumber = backgroundNumber;
+                        backgroundNumber = 0.0;
+                    } else {
+                        [self evaluateWithOperation:operation firstNumber:&firstNumber secondNumber:secondNumber];
+                    }
+                    displayValue = [@(firstNumber) stringValue];
+                }
                 isShowingResult = YES;
                 break;
 
             case BTN_ADD:
             case BTN_SUBTRACT:
+                previouslyTappedAddOrSub = YES;
+                willStartSecondValue = NO;
+                if(isShowingResult) {
+                    operation = identifier;
+                    backgroundOperation = identifier;
+                    backgroundNumber = [displayValue doubleValue];
+                    break;
+                }
+                if(backgroundNumber == 0) {
+                    if(isOnSecondValue) {
+                        secondNumber = [displayValue doubleValue];
+                        [self evaluateWithOperation:operation firstNumber:&firstNumber secondNumber:secondNumber];
+                        displayValue = [@(firstNumber) stringValue];
+                    }
+                    backgroundOperation = identifier;
+                    backgroundNumber = [displayValue doubleValue];
+                    isOnSecondValue = NO;
+                    isShowingResult = YES;
+                }
+                else {
+                    if(isOnSecondValue) {
+                        secondNumber = [displayValue doubleValue];
+                        [self evaluateWithOperation:operation firstNumber:&firstNumber secondNumber:secondNumber];
+                        [self evaluateWithOperation:backgroundOperation firstNumber:&backgroundNumber secondNumber:firstNumber];
+                        displayValue = [@(backgroundNumber) stringValue];
+                    } else {
+                        firstNumber = [displayValue doubleValue];
+                        [self evaluateWithOperation:backgroundOperation firstNumber:&backgroundNumber secondNumber:firstNumber];
+                        displayValue = [@(backgroundNumber) stringValue];
+                        isShowingResult = YES;
+                    }
+                }
+                operation = identifier;
+                backgroundOperation = identifier;
+                break;
+
             case BTN_MULTIPLY:
             case BTN_DIVIDE:
+                previouslyTappedMulOrDiv = YES;
+                if(previouslyTappedAddOrSub) {
+                    operation = identifier;
+                    firstNumber = backgroundNumber;
+                    backgroundNumber = 0.0;
+                    backgroundOperation = 0.0;
+                    willStartSecondValue = YES;
+                    break;
+                }
                 if(isOnSecondValue) {
                     secondNumber = [displayValue doubleValue];
-                    [self evaluate];
+                    [self evaluateWithOperation:operation firstNumber:&firstNumber secondNumber:secondNumber];
                     displayValue = [@(firstNumber) stringValue];
                     isOnSecondValue = NO;
                     isShowingResult = YES;
@@ -104,21 +164,27 @@
                 operation = identifier;
                 firstNumber = [displayValue doubleValue];
                 willStartSecondValue = YES;
+                break;
+
         }
     }
     if(identifier != BTN_CLEAR)
         previouslyTappedClear = NO;
+    if(identifier != BTN_ADD && identifier != BTN_SUBTRACT)
+        previouslyTappedAddOrSub = NO;
+    if(identifier != BTN_MULTIPLY && identifier != BTN_DIVIDE)
+        previouslyTappedMulOrDiv = NO;
 }
 
-- (void)evaluate {
-    if(operation == BTN_ADD)
-        firstNumber += secondNumber;
-    else if(operation == BTN_SUBTRACT)
-        firstNumber -= secondNumber;
-    else if(operation == BTN_MULTIPLY)
-        firstNumber *= secondNumber;
-    else if(operation == BTN_DIVIDE)
-        firstNumber /= secondNumber;
+- (void)evaluateWithOperation:(unsigned)op firstNumber:(double *)fn secondNumber:(double)sn {
+    if(op == BTN_ADD)
+        *fn += sn;
+    else if(op == BTN_SUBTRACT)
+        *fn -= sn;
+    else if(op == BTN_MULTIPLY)
+        *fn *= sn;
+    else if(op == BTN_DIVIDE)
+        *fn /= sn;
 }
 
 - (void)appendToDisplay:(NSString *)string {
