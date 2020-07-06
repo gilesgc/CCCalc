@@ -3,3 +3,6 @@
 #import "CCCalcDisplayView.h"
 #import "CCCalcButtons.h"
 #import "CCCalcBrain.h"
+#import "CCCalcScrollView.h"
+#import "CCCalcPage.h"
+#import "CCCalcFunction.h"

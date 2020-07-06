@@ -11,11 +11,12 @@
     BOOL willStartSecondValue;
     BOOL isOnSecondValue;
     BOOL isShowingResult;
+    BOOL isBackgroundNumberSet;
     BOOL previouslyTappedClear;
     BOOL previouslyTappedAddOrSub;
-    BOOL previouslyTappedMulOrDiv;
 }
 - (void)evaluateTap:(unsigned)identifier;
 - (NSString *)currentValue;
 - (NSString *)currentValueWithCommas;
+- (BOOL)displayingAC;
 @end

@@ -14,8 +14,11 @@
 @property (nonatomic, retain) id<CCCalcDelegate> delegate;
 @property (nonatomic) BOOL shouldStayHighlighted;
 + (id)imageForCharacter:(unsigned)character;
-- (void)setFrame:(CGRect)arg1;
 + (CGRect)circleBounds;
 + (NSString *)textForButtonID:(unsigned)identifier;
++ (UIImage *)textToImage:(NSString *)text;
+- (void)setFrame:(CGRect)frame;
+- (void)setImage:(UIImage *)image;
+- (void)highlightCircleView:(BOOL)highlight animated:(BOOL)animated;
 - (unsigned)character;
 @end

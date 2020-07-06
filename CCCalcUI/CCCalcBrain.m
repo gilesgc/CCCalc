@@ -1,6 +1,7 @@
 #import "CCCalcBrain.h"
+#import "CCCalcFunction.h"
 
-//This object handles all the calculations
+//This object handles all of the calculations
 
 @implementation CCCalcBrain
 
@@ -14,7 +15,7 @@
 
 - (void)evaluateTap:(unsigned)identifier {
 
-    if(identifier <= 9) {
+    if(identifier <= 9 || identifier == BTN_PI || identifier == BTN_EULERSNUMBER) {
         if(identifier == BTN_0 && [displayValue isEqualToString:@"0"])
             return;
         if(willStartSecondValue) {
@@ -26,10 +27,17 @@
             displayValue = @"";
             isShowingResult = NO;
         }
-        if(displayValue.length >= 9)
+        if(displayValue.length >= 12)
             return;
 
-        [self appendToDisplay:[@(identifier) stringValue]];
+        if(identifier <= 9) {
+            if([displayValue isEqualToString:@"0"])
+                displayValue = @"";
+            [self appendToDisplay:[@(identifier) stringValue]];
+        }
+        else {
+            displayValue = [@([CCCalcFunction.functions[@(identifier)] evaluateWithInput:0]) stringValue];
+        }
     }
     else {
         switch(identifier) {
@@ -38,7 +46,7 @@
                     [self clearDisplay];
                     willStartSecondValue = NO;
                     isOnSecondValue = YES;
-                } else if(previouslyTappedAddOrSub) {
+                } else if(previouslyTappedAddOrSub || isShowingResult) {
                     [self clearDisplay];
                 }
                 if(![displayValue containsString:@"."]) {
@@ -52,6 +60,7 @@
                 if(previouslyTappedClear) {
                     isOnSecondValue = NO;
                     willStartSecondValue = NO;
+                    isBackgroundNumberSet = NO;
                     firstNumber = 0.0;
                     secondNumber = 0.0;
                     backgroundNumber = 0.0;
@@ -71,7 +80,7 @@
             case BTN_PERCENT:
                 if(isOnSecondValue)
                     displayValue = [@(firstNumber * [displayValue doubleValue] / 100.0) stringValue];
-                else if(backgroundNumber != 0)
+                else if(isBackgroundNumberSet)
                     displayValue = [@(backgroundNumber * [displayValue doubleValue] / 100.0) stringValue];
                 else
                     displayValue = [@([displayValue doubleValue] / 100.0) stringValue];
@@ -79,24 +88,26 @@
 
             case BTN_EQUAL:
                 if(operation == 0)
-                    return;
+                    break;
                 if(isOnSecondValue) {
                     secondNumber = [displayValue doubleValue];
                     [self evaluateWithOperation:operation firstNumber:&firstNumber secondNumber:secondNumber];
-                    if(backgroundNumber != 0) {
+                    if(isBackgroundNumberSet) {
                         [self evaluateWithOperation:backgroundOperation firstNumber:&backgroundNumber secondNumber:firstNumber];
                         firstNumber = backgroundNumber;
                         backgroundNumber = 0.0;
+                        isBackgroundNumberSet = NO;
                     }
                     displayValue = [@(firstNumber) stringValue];
                     isOnSecondValue = NO;
                 }
                 else {
-                    if(backgroundNumber != 0) {
+                    if(isBackgroundNumberSet) {
                         secondNumber = [displayValue doubleValue];
                         [self evaluateWithOperation:backgroundOperation firstNumber:&backgroundNumber secondNumber:secondNumber];
                         firstNumber = backgroundNumber;
                         backgroundNumber = 0.0;
+                        isBackgroundNumberSet = NO;
                     } else {
                         [self evaluateWithOperation:operation firstNumber:&firstNumber secondNumber:secondNumber];
                     }
@@ -107,22 +118,27 @@
 
             case BTN_ADD:
             case BTN_SUBTRACT:
+                if(previouslyTappedAddOrSub) {
+                    operation = identifier;
+                    backgroundOperation = identifier;
+                    break;
+                }
                 previouslyTappedAddOrSub = YES;
                 willStartSecondValue = NO;
                 if(isShowingResult) {
                     operation = identifier;
                     backgroundOperation = identifier;
-                    backgroundNumber = [displayValue doubleValue];
+                    [self setBackgroundNumber:[displayValue doubleValue]];
                     break;
                 }
-                if(backgroundNumber == 0) {
+                if(!isBackgroundNumberSet) {
                     if(isOnSecondValue) {
                         secondNumber = [displayValue doubleValue];
                         [self evaluateWithOperation:operation firstNumber:&firstNumber secondNumber:secondNumber];
                         displayValue = [@(firstNumber) stringValue];
                     }
                     backgroundOperation = identifier;
-                    backgroundNumber = [displayValue doubleValue];
+                    [self setBackgroundNumber:[displayValue doubleValue]];
                     isOnSecondValue = NO;
                     isShowingResult = YES;
                 }
@@ -132,12 +148,13 @@
                         [self evaluateWithOperation:operation firstNumber:&firstNumber secondNumber:secondNumber];
                         [self evaluateWithOperation:backgroundOperation firstNumber:&backgroundNumber secondNumber:firstNumber];
                         displayValue = [@(backgroundNumber) stringValue];
+                        isOnSecondValue = NO;
                     } else {
                         firstNumber = [displayValue doubleValue];
                         [self evaluateWithOperation:backgroundOperation firstNumber:&backgroundNumber secondNumber:firstNumber];
                         displayValue = [@(backgroundNumber) stringValue];
-                        isShowingResult = YES;
                     }
+                    isShowingResult = YES;
                 }
                 operation = identifier;
                 backgroundOperation = identifier;
@@ -145,11 +162,11 @@
 
             case BTN_MULTIPLY:
             case BTN_DIVIDE:
-                previouslyTappedMulOrDiv = YES;
                 if(previouslyTappedAddOrSub) {
                     operation = identifier;
                     firstNumber = backgroundNumber;
                     backgroundNumber = 0.0;
+                    isBackgroundNumberSet = NO;
                     backgroundOperation = 0.0;
                     willStartSecondValue = YES;
                     break;
@@ -166,14 +183,27 @@
                 willStartSecondValue = YES;
                 break;
 
+            default:
+                if(CCCalcFunction.functions[@(identifier)]) {
+                    if(identifier == BTN_TRIGUNITSSWITCHER) {
+                        [CCCalcFunction.functions[@(BTN_TRIGUNITSSWITCHER)] evaluateWithInput:0];
+                        break;
+                    }
+
+                    displayValue = [@([CCCalcFunction.functions[@(identifier)] evaluateWithInput:[displayValue doubleValue]]) stringValue];
+                }
+
         }
     }
     if(identifier != BTN_CLEAR)
         previouslyTappedClear = NO;
     if(identifier != BTN_ADD && identifier != BTN_SUBTRACT)
         previouslyTappedAddOrSub = NO;
-    if(identifier != BTN_MULTIPLY && identifier != BTN_DIVIDE)
-        previouslyTappedMulOrDiv = NO;
+}
+
+- (void)setBackgroundNumber:(double)number {
+    backgroundNumber = number;
+    isBackgroundNumberSet = YES;
 }
 
 - (void)evaluateWithOperation:(unsigned)op firstNumber:(double *)fn secondNumber:(double)sn {
@@ -194,6 +224,10 @@
 - (void)clearDisplay {
     displayValue = @"0";
     isShowingResult = YES;
+}
+
+- (BOOL)displayingAC {
+    return previouslyTappedClear;
 }
 
 + (NSString *)commaFormat:(NSString *)input {
