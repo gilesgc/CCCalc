@@ -2,6 +2,7 @@
 #import "CCCalcFunction.h"
 
 //This object handles all of the calculations
+//Do not scroll down if you value your sanity
 
 @implementation CCCalcBrain
 

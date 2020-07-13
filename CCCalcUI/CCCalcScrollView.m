@@ -10,8 +10,8 @@
         _pageSize = size;
         [self setCanCancelContentTouches:YES];
         [self setPagingEnabled:YES];
-		[self setBounces:NO];
-		[self setDelaysContentTouches:NO];
+        [self setBounces:NO];
+        [self setDelaysContentTouches:NO];
         [self setShowsHorizontalScrollIndicator:NO];
         [self setShowsVerticalScrollIndicator:NO];
     }
