@@ -83,7 +83,7 @@
 			case BTN_DIVIDE:
 				return @"÷";
 			case BTN_MULTIPLY:
-				return @"âœ•";
+				return @"x";
 			case BTN_SUBTRACT:
 				return @"−";
 			case BTN_ADD:
@@ -165,7 +165,7 @@ static int _functionsGrid[5][4] = {
 
 - (void)loadView {
 	self.view = _scrollView;
-	[[self view] addSubview:[self displayView]];
+	[self.view addSubview:self.displayView];
 }
 
 - (void)viewWillLayoutSubviews {
@@ -254,6 +254,10 @@ static int _functionsGrid[5][4] = {
 	}
 }
 
+- (BOOL)_canShowWhileLocked {
+	return YES;
+}
+
 @end
 
 
@@ -272,25 +276,25 @@ static CCCalcViewController *ccCalcController;
 
 		if(!ccCalcController) {
 			ccCalcController = [[CCCalcViewController alloc] initWithPageSize:CGSizeMake(self.preferredExpandedContentWidth, self.preferredExpandedContentHeight - (self.headerHeight + self._footerHeight))];
-			MSHookIvar<UIView *>(self, "_contentView") = [ccCalcController view];
-			[[self view] addSubview:[ccCalcController displayView]];
-			[[self view] addSubview:[ccCalcController view]];
+			MSHookIvar<UIView *>(self, "_contentView") = ccCalcController.view;
+			[self.view addSubview:ccCalcController.displayView];
+			[self.view addSubview:ccCalcController.view];
 
-			[[ccCalcController displayView] setFrame:CGRectMake(0, 0, self.preferredExpandedContentWidth, self.headerHeight)];
+			[ccCalcController.displayView setFrame:CGRectMake(0, 0, self.preferredExpandedContentWidth, self.headerHeight)];
 		}
 
 		for(UIView *menuItem in MSHookIvar<UIStackView *>(self, "_menuItemsContainer").arrangedSubviews) {
-			[menuItem setHidden:YES];
+			menuItem.hidden = YES;
 		}
 
-		[[ccCalcController view] setHidden:NO];
-		[[ccCalcController displayView] setHidden:NO];
-		[[self buttonView] setHidden:YES];
+		ccCalcController.view.hidden = NO;
+		ccCalcController.displayView.hidden = NO;
+		self.buttonView.hidden = YES;
 	
 	} else {
-		[[ccCalcController view] setHidden:YES];
-		[[ccCalcController displayView] setHidden:YES];
-		[[self buttonView] setHidden:NO];
+		ccCalcController.view.hidden = YES;
+		ccCalcController.displayView.hidden = YES;
+		self.buttonView.hidden = NO;
 	}
 
 }

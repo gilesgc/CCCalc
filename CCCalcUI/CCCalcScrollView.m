@@ -8,12 +8,12 @@
     if(self) {
         _pages = [[NSMutableArray alloc] init];
         _pageSize = size;
-        [self setCanCancelContentTouches:YES];
-        [self setPagingEnabled:YES];
-        [self setBounces:NO];
-        [self setDelaysContentTouches:NO];
-        [self setShowsHorizontalScrollIndicator:NO];
-        [self setShowsVerticalScrollIndicator:NO];
+        self.canCancelContentTouches = YES;
+        self.pagingEnabled = YES;
+        self.bounces = NO;
+        self.delaysContentTouches = NO;
+        self.showsHorizontalScrollIndicator = NO;
+        self.showsVerticalScrollIndicator = NO;
     }
 
     return self;
@@ -29,16 +29,25 @@
 - (void)addPage:(CCCalcPage *)page {
     [_pages addObject:page];
     [self addSubview:page];
-}
-
-- (void)setBounds:(CGRect)bounds {
-    [super setBounds:bounds];
 
     for(int i = 0; i < [_pages count]; i++) {
-        [_pages[i] setFrame:CGRectMake(i * self.frame.size.width, 0, _pageSize.width, _pageSize.height)];
+        [_pages[i] setFrame:CGRectMake(i * _pageSize.width, 0, _pageSize.width, _pageSize.height)];
     }
 
-    [self setContentSize:CGSizeMake(self.frame.size.width * _pages.count, _pageSize.height)];
+    [self setContentSize:CGSizeMake(_pageSize.width * _pages.count, _pageSize.height)];
+}
+
+- (void)setFrame:(CGRect)frame {
+    if(([[[UIDevice currentDevice] systemVersion] compare:@"12.4.1" options:NSNumericSearch] != NSOrderedDescending)) {
+        [super setFrame:frame];
+        return;
+    }
+
+    if(UIDeviceOrientationIsLandscape(UIDevice.currentDevice.orientation)) {
+        [super setFrame:CGRectMake(0, self.frame.origin.y, _pageSize.width, (UIScreen.mainScreen.bounds.size.height - self.frame.origin.y - 24.5))];
+    } else {
+        [super setFrame:frame];
+    }
 }
 
 @end

@@ -14,4 +14,5 @@
 @property (nonatomic, retain) CCCalcDisplayView *displayView;
 @property (nonatomic, retain) CCCalcBrain *brain;
 - (void)buttonTapped:(unsigned)identifier;
+- (BOOL)_canShowWhileLocked;
 @end
