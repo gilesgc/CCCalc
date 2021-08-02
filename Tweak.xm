@@ -316,7 +316,7 @@ static CCCalcViewController *ccCalcController;
 }
 
 %new -(BOOL)isCalcModule {
-	return [[MSHookIvar<SBFApplication *>(self, "_application") applicationBundleIdentifier] isEqualToString:@"com.apple.calculator"];
+	return true; // paisseon: this fixes on ios 14, and seems to not cause error on other toggles for some reason
 }
 
 %end
