@@ -12,3 +12,6 @@
 @interface SBFApplication : NSObject
 - (NSString *)applicationBundleIdentifier;
 @end
+
+@interface CCUIAppLauncherModule : NSObject
+@end

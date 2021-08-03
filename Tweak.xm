@@ -1,5 +1,19 @@
+#import <objc/runtime.h>
 #import "Tweak.h"
 #import "CCCalcUI/CCCalcUI.h"
+
+bool class_hasSubIvar(const char *cls, const char *ivar) {
+	unsigned int icount = 0;
+	Ivar *ivars = class_copyIvarList(objc_getClass(cls), &icount);
+	for (int i = 0; i < icount; i++) {
+		if (strcmp(ivar_getName(ivars[i]), ivar) == 0) {
+			free(ivars);
+			return true;
+		}
+	}
+	free(ivars);
+	return false;
+}
 
 %subclass CCCalcButton : TPNumberPadDarkStyleButton
 //Subclass of the lockscreen keypad buttons
@@ -315,8 +329,33 @@ static CCCalcViewController *ccCalcController;
 	%orig;
 }
 
+%end
+
+%group beforeiOS14
+%hook CCUIAppLauncherViewController
+
 %new -(BOOL)isCalcModule {
 	return [[MSHookIvar<SBFApplication *>(self, "_application") applicationBundleIdentifier] isEqualToString:@"com.apple.calculator"];
 }
 
 %end
+%end
+
+%group afteriOS14
+%hook CCUIAppLauncherViewController
+
+%new -(BOOL)isCalcModule {
+	return [[MSHookIvar<SBFApplication *>(MSHookIvar<CCUIAppLauncherModule *>(self, "_module"), "_application") applicationBundleIdentifier] isEqualToString:@"com.apple.calculator"];
+}
+
+%end
+%end
+
+%ctor {
+	if (class_hasSubIvar("CCUIAppLauncherViewController", "_application")) {
+		%init(beforeiOS14);
+	} else {
+		%init(afteriOS14);
+	}
+	%init(_ungrouped);
+}
