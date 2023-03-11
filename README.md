@@ -1,4 +1,7 @@
 # CCCalc
-An iOS jailbreak tweak that turns your calculator module into a real calculator
+CCCalc is a unique iOS jailbreak tweak that enhances the functionality of the control center's calculator module. With CCCalc, users can transform the basic calculator found in the control center into a powerful and comprehensive calculator that supports a wide range of mathematical functions.
 
-<img src="https://gilesgc.github.io/repo/depictions/com.gilesgc.cccalc/screenshots/module.PNG" width="300" />
+For those unaware, jailbreak tweaks can modify various aspects of the iOS operating system, such as the user interface, system settings, and app functionality.
+
+## Demo:
+https://user-images.githubusercontent.com/50000301/224463215-25bd3c96-5d27-40d6-a982-1375fafd6c11.mp4
